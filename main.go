@@ -20,8 +20,21 @@ func main() {
 	log.Printf("Number of configured JWKS keys: %d", len(AppContext.JwksKeys))
 
 	router := mux.NewRouter()
+
+	// Health check
 	router.HandleFunc("/healthz", GET_healthz).Methods("GET")
+
+	// JWKS endpoint
 	router.HandleFunc("/.well-known/jwks.json", GET_well_known_jwks).Methods("GET")
+
+	// Authentication endpoints
+	router.HandleFunc("/login/init", POST_login_init).Methods("POST")
+	router.HandleFunc("/login/complete", POST_login_complete).Methods("POST")
+	router.HandleFunc("/login/refresh", POST_login_refresh).Methods("POST")
+
+	// User profile endpoint
+	router.HandleFunc("/me", GET_me).Methods("GET")
+
 	loggedRouter := accessLogger(router)
 
 	addr := ":" + strconv.Itoa(port)

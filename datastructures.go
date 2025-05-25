@@ -5,7 +5,7 @@ import "crypto/rsa"
 type IdpUser struct {
 	Id         string                 `json:"id"`
 	Username   string                 `json:"username"`
-	Password   string                 `json:"password"`
+	Password   string                 `json:"password,omitempty"`
 	Disabled   bool                   `json:"disabled"`
 	Attributes map[string]interface{} `json:"attributes"`
 }
@@ -26,6 +26,7 @@ type IdpConfig struct {
 type IdpInitLoginRequest struct {
 	Username          string `json:"username"`
 	Password          string `json:"password"`
+	ClientId          string `json:"client_id"`
 	IssueRefreshToken bool   `json:"issue_refresh_token"`
 }
 

@@ -5,12 +5,27 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"math/big"
+	"time"
 )
 
+type PendingLogin struct {
+	UserId            string
+	ClientId          string
+	IssueRefreshToken bool
+	CreatedAt         time.Time
+}
+
+type IssuedRefreshToken struct {
+	UserId    string
+	ExpiresAt time.Time
+}
+
 type AppServerContext struct {
-	Users    []IdpUser
-	Clients  []IdpClient
-	JwksKeys []IdpJwksKey
+	Users         []IdpUser
+	Clients       []IdpClient
+	JwksKeys      []IdpJwksKey
+	PendingLogins map[string]PendingLogin
+	RefreshTokens map[string]IssuedRefreshToken
 }
 
 var AppContext *AppServerContext
@@ -42,17 +57,20 @@ func NewAppContext() *AppServerContext {
 	kid := generateRandomKid()
 
 	jwk := IdpJwksKey{
-		Kid: kid,
-		Kty: "RSA",
-		Alg: "RS256",
-		Use: "sig",
-		N:   base64UrlEncodeBigInt(publicKey.N),
-		E:   base64UrlEncodeUint(uint64(publicKey.E)),
+		Kid:        kid,
+		Kty:        "RSA",
+		Alg:        "RS256",
+		Use:        "sig",
+		N:          base64UrlEncodeBigInt(publicKey.N),
+		E:          base64UrlEncodeUint(uint64(publicKey.E)),
+		PrivateKey: key,
 	}
 
 	return &AppServerContext{
-		Users:    AppConfig.Users,
-		Clients:  AppConfig.Clients,
-		JwksKeys: []IdpJwksKey{jwk},
+		Users:         AppConfig.Users,
+		Clients:       AppConfig.Clients,
+		JwksKeys:      []IdpJwksKey{jwk},
+		PendingLogins: make(map[string]PendingLogin),
+		RefreshTokens: make(map[string]IssuedRefreshToken),
 	}
 }
