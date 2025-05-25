@@ -1,27 +1,28 @@
 package main
 
 import (
+	"log"
 	"os"
 	"strconv"
 
 	"github.com/goccy/go-yaml"
 )
 
-type Config struct {
-	Port int `yaml:"port"`
-}
+var AppConfig *IdpConfig
 
-var AppConfig *Config
-
-func LoadConfig() *Config {
-	defaultPort := 8080
-	config := &Config{Port: defaultPort}
+func LoadConfig() *IdpConfig {
+	config := new(IdpConfig)
 
 	configPath := os.Getenv("CONFIG_PATH")
-	if configPath != "" {
-		if data, err := os.ReadFile(configPath); err == nil {
-			_ = yaml.Unmarshal(data, config)
-		}
+
+	if configPath == "" {
+		configPath = "/config.yaml"
+	}
+
+	if data, err := os.ReadFile(configPath); err == nil {
+		_ = yaml.Unmarshal(data, config)
+	} else {
+		log.Printf("Error reading config file: %v", err)
 	}
 
 	if portEnv := os.Getenv("PORT"); portEnv != "" {
@@ -29,9 +30,11 @@ func LoadConfig() *Config {
 			config.Port = p
 		}
 	}
-	return config
-}
 
-func (c *Config) GetPort() int {
-	return c.Port
+	if config.Port == 0 {
+		// default port
+		config.Port = 8080
+	}
+
+	return config
 }

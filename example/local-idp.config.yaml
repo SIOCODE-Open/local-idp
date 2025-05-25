@@ -1,0 +1,19 @@
+port: 8080
+users:
+  - id: "1"
+    username: "user1"
+    password: "password1"
+    attributes:
+      role_name: "admin"
+      email: "user1@example.com"
+  - id: "2"
+    username: "user2"
+    password: "password2"
+    attributes:
+      role_name: "user"
+      email: "user2@example.com"
+clients:
+  - id: "client1"
+    audience: "example.com"
+    secret: "super_secret"
+    redirect_uri: "http://localhost:3000/callback"

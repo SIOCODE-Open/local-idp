@@ -8,21 +8,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type AppServerContext struct {
-	// Extend with shared resources as needed
-}
-
 func main() {
 	log.SetFlags(log.LstdFlags | log.LUTC)
 	AppConfig = LoadConfig()
-	port := AppConfig.GetPort()
+	AppContext = NewAppContext()
+	port := AppConfig.Port
 
 	log.Printf("Starting server on port %d", port)
-
-	appCtx := &AppServerContext{}
+	log.Printf("Number of configured users: %d", len(AppConfig.Users))
+	log.Printf("Number of configured clients: %d", len(AppConfig.Clients))
+	log.Printf("Number of configured JWKS keys: %d", len(AppContext.JwksKeys))
 
 	router := mux.NewRouter()
-	router.HandleFunc("/healthz", GET_healthz(appCtx)).Methods("GET")
+	router.HandleFunc("/healthz", GET_healthz).Methods("GET")
+	router.HandleFunc("/.well-known/jwks.json", GET_well_known_jwks).Methods("GET")
 	loggedRouter := accessLogger(router)
 
 	addr := ":" + strconv.Itoa(port)
