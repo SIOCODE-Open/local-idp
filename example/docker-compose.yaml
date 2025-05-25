@@ -1,0 +1,8 @@
+services:
+  idp:
+    image: siocode/local-idp:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./local-idp.config.yaml:/config.yaml
+
