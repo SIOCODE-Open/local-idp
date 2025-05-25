@@ -44,6 +44,12 @@ func main() {
 	// User profile endpoint
 	router.HandleFunc("/me", GET_me).Methods("GET")
 
+	// User management endpoints
+	router.HandleFunc("/users/{id}", PUT_users_id).Methods("PUT")
+	router.HandleFunc("/users/{id}/disable", POST_users_id_disable).Methods("POST")
+	router.HandleFunc("/users/{id}/enable", POST_users_id_enable).Methods("POST")
+	router.HandleFunc("/users/{id}", DELETE_users_id).Methods("DELETE")
+
 	loggedRouter := accessLogger(router)
 
 	addr := ":" + strconv.Itoa(port)
