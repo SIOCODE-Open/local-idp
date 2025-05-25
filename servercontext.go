@@ -17,15 +17,25 @@ type PendingLogin struct {
 
 type IssuedRefreshToken struct {
 	UserId    string
+	ClientId  string
 	ExpiresAt time.Time
 }
 
+type OauthPendingAuthorization struct {
+	Code        string
+	UserId      string
+	ClientId    string
+	RedirectUri string
+	ExpiresAt   time.Time
+}
+
 type AppServerContext struct {
-	Users         []IdpUser
-	Clients       []IdpClient
-	JwksKeys      []IdpJwksKey
-	PendingLogins map[string]PendingLogin
-	RefreshTokens map[string]IssuedRefreshToken
+	Users                 []IdpUser
+	Clients               []IdpClient
+	JwksKeys              []IdpJwksKey
+	PendingLogins         map[string]PendingLogin
+	RefreshTokens         map[string]IssuedRefreshToken
+	OauthPendingAuthCodes map[string]OauthPendingAuthorization
 }
 
 var AppContext *AppServerContext
@@ -67,10 +77,11 @@ func NewAppContext() *AppServerContext {
 	}
 
 	return &AppServerContext{
-		Users:         AppConfig.Users,
-		Clients:       AppConfig.Clients,
-		JwksKeys:      []IdpJwksKey{jwk},
-		PendingLogins: make(map[string]PendingLogin),
-		RefreshTokens: make(map[string]IssuedRefreshToken),
+		Users:                 AppConfig.Users,
+		Clients:               AppConfig.Clients,
+		JwksKeys:              []IdpJwksKey{jwk},
+		PendingLogins:         make(map[string]PendingLogin),
+		RefreshTokens:         make(map[string]IssuedRefreshToken),
+		OauthPendingAuthCodes: make(map[string]OauthPendingAuthorization),
 	}
 }

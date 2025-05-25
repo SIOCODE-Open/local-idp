@@ -41,18 +41,17 @@ func POST_login_refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Find client from request header
-	clientId := r.Header.Get("X-Client-ID")
+	// Find client from stored client ID
 	var foundClient *IdpClient
 	for i, client := range AppContext.Clients {
-		if client.Id == clientId {
+		if client.Id == refreshToken.ClientId {
 			foundClient = &AppContext.Clients[i]
 			break
 		}
 	}
 
 	if foundClient == nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid client"})
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Client not found"})
 		return
 	}
 
@@ -73,6 +72,7 @@ func POST_login_refresh(w http.ResponseWriter, r *http.Request) {
 	newRefreshToken := generateRandomToken()
 	AppContext.RefreshTokens[newRefreshToken] = IssuedRefreshToken{
 		UserId:    foundUser.Id,
+		ClientId:  foundClient.Id,
 		ExpiresAt: time.Now().Add(RefreshExpiry),
 	}
 

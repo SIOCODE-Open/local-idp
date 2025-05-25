@@ -19,6 +19,8 @@ type IdpClient struct {
 
 type IdpConfig struct {
 	Port    int         `json:"port"`
+	Issuer  string      `json:"issuer,omitempty"`
+	BaseUrl string      `json:"base_url,omitempty"`
 	Users   []IdpUser   `json:"users"`
 	Clients []IdpClient `json:"clients"`
 }

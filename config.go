@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -34,6 +35,16 @@ func LoadConfig() *IdpConfig {
 	if config.Port == 0 {
 		// default port
 		config.Port = 8080
+	}
+
+	// Set default base URL if not provided
+	if config.BaseUrl == "" {
+		config.BaseUrl = fmt.Sprintf("http://localhost:%d", config.Port)
+	}
+
+	// Set default issuer if not provided
+	if config.Issuer == "" {
+		config.Issuer = fmt.Sprintf("http://localhost:%d", config.Port)
 	}
 
 	return config

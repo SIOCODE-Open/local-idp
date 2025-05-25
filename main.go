@@ -27,7 +27,16 @@ func main() {
 	// JWKS endpoint
 	router.HandleFunc("/.well-known/jwks.json", GET_well_known_jwks).Methods("GET")
 
-	// Authentication endpoints
+	// OpenID Connect endpoints
+	router.HandleFunc("/.well-known/openid-configuration", GET_openid_configuration).Methods("GET")
+	router.HandleFunc("/userinfo", GET_userinfo).Methods("GET")
+
+	// OAuth2 endpoints
+	router.HandleFunc("/oauth2/authorize", GET_oauth2_authorize).Methods("GET")
+	router.HandleFunc("/oauth2/authorize/submit", POST_oauth2_authorize_submit).Methods("POST")
+	router.HandleFunc("/oauth2/token", POST_oauth2_token).Methods("POST")
+
+	// Custom authentication endpoints
 	router.HandleFunc("/login/init", POST_login_init).Methods("POST")
 	router.HandleFunc("/login/complete", POST_login_complete).Methods("POST")
 	router.HandleFunc("/login/refresh", POST_login_refresh).Methods("POST")
