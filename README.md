@@ -153,6 +153,14 @@ cd example
 docker compose up
 ```
 
+## 🏗️ Building
+
+Build the container via the following command (builds for both X86 & ARM architectures):
+
+```bash
+docker buildx build --platform=linux/arm64,linux/amd64 -t siocode/local-idp:latest .
+```
+
 ## 📜 License
 
 MIT © 2025 SIOCODE
