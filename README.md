@@ -41,10 +41,14 @@ YAML configuration is passed via `CONFIG_PATH` env var or defaults to `/config.y
 
 ```yaml
 port: 8080
+# No need to set issuer / base_url, but you can
+issuer: http://localhost:8080
+base_url: http://localhost:8080
 users:
   - id: "1"
     username: "user1"
     password: "password1"
+    # User attributes are arbitrary
     attributes:
       role_name: "admin"
       email: "user1@example.com"
@@ -62,6 +66,8 @@ clients:
 ```
 
 ## 🔐 Endpoints
+
+[📄 See `API.md` for a complete reference of the API endpoints](./API.md)
 
 ### 🔧 Health & Metadata
 
@@ -93,6 +99,8 @@ clients:
 
 | Method | Path                 | Description             |
 | ------ | -------------------- | ----------------------- |
+| GET    | `/users`             | List all users          |
+| GET    | `/users/:id`         | Get user by ID          |
 | PUT    | `/users/:id`         | Create or update a user |
 | POST   | `/users/:id/disable` | Disable a user          |
 | POST   | `/users/:id/enable`  | Enable a user           |
@@ -118,6 +126,7 @@ Use grant type `authorization_code`, client ID/secret from config, and redirect 
 Supported client libraries:
 
 * [`openid-client` (Node.js)](https://github.com/panva/node-openid-client)
+* [`aws-jwt-verify` (Node.js / browser)](https://github.com/awslabs/aws-jwt-verify)
 * OAuth2-Proxy
 * NextAuth.js
 * Keycloak Gatekeeper
