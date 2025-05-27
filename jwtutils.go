@@ -27,28 +27,32 @@ func generateRandomToken() string {
 
 func generateAccessToken(user *IdpUser, client *IdpClient) (string, error) {
 	now := time.Now()
+	jwksKey := AppContext.JwksKeys[0]
 	claims := jwt.MapClaims{
 		"sub":       user.Id,
-		"iss":       "local-idp",
+		"iss":       AppConfig.Issuer,
+		"aud":       client.Audience,
 		"iat":       now.Unix(),
 		"exp":       now.Add(TokenExpiry).Unix(),
 		"auth_time": now.Unix(),
 		"token_use": TokenUseAccess,
 		"client_id": client.Id,
-		"aud":       client.Audience,
 		"scope":     "openid profile",
 		"jti":       generateRandomToken(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	return token.SignedString(AppContext.JwksKeys[0].PrivateKey)
+	token.Header["kid"] = jwksKey.Kid
+
+	return token.SignedString(jwksKey.PrivateKey)
 }
 
 func generateIdentityToken(user *IdpUser, client *IdpClient) (string, error) {
 	now := time.Now()
+	jwksKey := AppContext.JwksKeys[0]
 	claims := jwt.MapClaims{
 		"sub":       user.Id,
-		"iss":       "local-idp",
+		"iss":       AppConfig.Issuer,
 		"iat":       now.Unix(),
 		"exp":       now.Add(TokenExpiry).Unix(),
 		"auth_time": now.Unix(),
@@ -64,7 +68,9 @@ func generateIdentityToken(user *IdpUser, client *IdpClient) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	return token.SignedString(AppContext.JwksKeys[0].PrivateKey)
+	token.Header["kid"] = jwksKey.Kid
+
+	return token.SignedString(jwksKey.PrivateKey)
 }
 
 func validateAccessToken(tokenString string) (*jwt.Token, error) {

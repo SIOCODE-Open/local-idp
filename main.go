@@ -49,6 +49,8 @@ func main() {
 	router.HandleFunc("/users/{id}/disable", POST_users_id_disable).Methods("POST")
 	router.HandleFunc("/users/{id}/enable", POST_users_id_enable).Methods("POST")
 	router.HandleFunc("/users/{id}", DELETE_users_id).Methods("DELETE")
+	router.HandleFunc("/users/{id}", GET_users_id).Methods("GET")
+	router.HandleFunc("/users", GET_users).Methods("GET")
 
 	loggedRouter := accessLogger(router)
 
