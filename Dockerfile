@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1-alpine AS builder
 
 WORKDIR /app
 
@@ -14,7 +14,8 @@ COPY *.go ./
 
 # Build the application
 ARG TARGETARCH
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=${TARGETARCH} go build -o main .
+ARG TARGETOS
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -o main .
 
 # Final stage
 FROM scratch
