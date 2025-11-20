@@ -40,6 +40,13 @@ const loginFormTemplate = `
             <input type="password" id="password" name="password" required>
         </div>
         
+        {{if .ShowChallenge}}
+        <div class="form-group">
+            <label for="challenge">Challenge (enter anything):</label>
+            <input type="text" id="challenge" name="challenge" required>
+        </div>
+        {{end}}
+        
         <button type="submit">Login</button>
     </form>
 </body>
@@ -47,11 +54,12 @@ const loginFormTemplate = `
 `
 
 type loginFormData struct {
-	Error       string
-	ClientID    string
-	RedirectURI string
-	Scope       string
-	State       string
+	Error         string
+	ClientID      string
+	RedirectURI   string
+	Scope         string
+	State         string
+	ShowChallenge bool
 }
 
 func GET_oauth2_authorize(w http.ResponseWriter, r *http.Request) {
@@ -90,10 +98,11 @@ func GET_oauth2_authorize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := loginFormData{
-		ClientID:    clientID,
-		RedirectURI: redirectURI,
-		Scope:       scope,
-		State:       state,
+		ClientID:      clientID,
+		RedirectURI:   redirectURI,
+		Scope:         scope,
+		State:         state,
+		ShowChallenge: *AppConfig.OAuth2.RequireChallengeOnLogin,
 	}
 
 	w.Header().Set("Content-Type", "text/html")

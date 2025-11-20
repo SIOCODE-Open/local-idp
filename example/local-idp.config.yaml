@@ -1,6 +1,16 @@
 port: 8080
 access_token_expiration_seconds: 900    # 15 minutes
 refresh_token_expiration_seconds: 86400 # 1 day
+
+# OAuth2 configuration (optional, defaults shown)
+oauth2:
+  enabled: true                      # Enable OAuth2/OIDC authorization code flow
+  require_challenge_on_login: false  # Show challenge field on login page
+
+# Login API configuration (optional, defaults shown)
+login_api:
+  enabled: true                      # Enable Cognito-style login API endpoints
+
 users:
   - id: "1"
     username: "user1"

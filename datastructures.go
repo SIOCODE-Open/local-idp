@@ -17,14 +17,25 @@ type IdpClient struct {
 	Audience    string `json:"audience"`
 }
 
+type OAuth2Config struct {
+	Enabled                 *bool `json:"enabled,omitempty"`
+	RequireChallengeOnLogin *bool `json:"require_challenge_on_login,omitempty"`
+}
+
+type LoginApiConfig struct {
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
 type IdpConfig struct {
-	Port                          int         `json:"port"`
-	Issuer                        string      `json:"issuer,omitempty"`
-	BaseUrl                       string      `json:"base_url,omitempty"`
-	AccessTokenExpirationSeconds  int         `json:"access_token_expiration_seconds,omitempty"`
-	RefreshTokenExpirationSeconds int         `json:"refresh_token_expiration_seconds,omitempty"`
-	Users                         []IdpUser   `json:"users"`
-	Clients                       []IdpClient `json:"clients"`
+	Port                          int            `json:"port"`
+	Issuer                        string         `json:"issuer,omitempty"`
+	BaseUrl                       string         `json:"base_url,omitempty"`
+	AccessTokenExpirationSeconds  int            `json:"access_token_expiration_seconds,omitempty"`
+	RefreshTokenExpirationSeconds int            `json:"refresh_token_expiration_seconds,omitempty"`
+	OAuth2                        OAuth2Config   `json:"oauth2,omitempty"`
+	LoginApi                      LoginApiConfig `json:"login_api,omitempty"`
+	Users                         []IdpUser      `json:"users"`
+	Clients                       []IdpClient    `json:"clients"`
 }
 
 type IdpInitLoginRequest struct {

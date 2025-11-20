@@ -6,13 +6,20 @@ This document describes all configuration options for the SIOCODE Local Identity
 
 ## Configuration File
 
-The identity provider is configured via a YAML file. By default, the server looks for `/config.yaml`, but you can specify a custom path using the `CONFIG_PATH` environment variable.
+The identity provider is configured via a YAML file. By default, the server looks for `/config.yaml`, but you can specify a custom path using:
+
+1. Command-line flag: `-c` or `--config-path`
+2. Environment variable: `CONFIG_PATH`
 
 ### Configuration File Path
 
+- **Command-Line Flag**: `-c <path>` or `--config-path <path>`
 - **Environment Variable**: `CONFIG_PATH`
 - **Default**: `/config.yaml`
-- **Example**: `CONFIG_PATH=/app/my-config.yaml`
+- **Example**: 
+  - `local-idp -c /app/my-config.yaml`
+  - `local-idp --config-path /app/my-config.yaml`
+  - `CONFIG_PATH=/app/my-config.yaml local-idp`
 
 ---
 
@@ -111,6 +118,83 @@ The expiration time in seconds for refresh tokens.
 - **Example**: `refresh_token_expiration_seconds: 86400`
 
 This value determines how long refresh tokens remain valid before they must be replaced. When a refresh token expires, the user must re-authenticate.
+
+---
+
+### `oauth2` (object, optional)
+
+OAuth2 provider configuration options.
+
+- **Type**: Object
+- **Default**: `{ enabled: true, require_challenge_on_login: false }`
+
+#### OAuth2 Object Properties
+
+##### `enabled` (boolean, optional)
+
+Whether OAuth2/OIDC authorization code flow endpoints are enabled.
+
+- **Type**: Boolean
+- **Default**: `true`
+- **Example**: `enabled: true`
+
+When enabled, the following endpoints are available:
+- `GET /oauth2/authorize`
+- `POST /oauth2/authorize/submit`
+- `POST /oauth2/token`
+
+When disabled, these endpoints will not be registered and OAuth2 flows will not be available.
+
+##### `require_challenge_on_login` (boolean, optional)
+
+Whether to show and require a challenge field on the login page.
+
+- **Type**: Boolean
+- **Default**: `false`
+- **Example**: `require_challenge_on_login: false`
+
+When enabled, the login form will display an additional challenge input field. Users can enter any value (this is a dummy challenge for testing purposes). This can be useful for testing applications that expect additional authentication factors.
+
+#### OAuth2 Example
+
+```yaml
+oauth2:
+  enabled: true
+  require_challenge_on_login: false
+```
+
+---
+
+### `login_api` (object, optional)
+
+Login API configuration options for Cognito-style admin API endpoints.
+
+- **Type**: Object
+- **Default**: `{ enabled: true }`
+
+#### LoginApi Object Properties
+
+##### `enabled` (boolean, optional)
+
+Whether the Cognito-style login API endpoints are enabled.
+
+- **Type**: Boolean
+- **Default**: `true`
+- **Example**: `enabled: true`
+
+When enabled, the following endpoints are available:
+- `POST /login/init`
+- `POST /login/complete`
+- `POST /login/refresh`
+
+When disabled, these endpoints will not be registered.
+
+#### LoginApi Example
+
+```yaml
+login_api:
+  enabled: true
+```
 
 ---
 
@@ -287,6 +371,15 @@ base_url: http://localhost:8080
 # Token expiration settings (in seconds)
 access_token_expiration_seconds: 900    # 15 minutes
 refresh_token_expiration_seconds: 86400 # 1 day
+
+# OAuth2 configuration (optional)
+oauth2:
+  enabled: true                      # Enable OAuth2/OIDC authorization code flow
+  require_challenge_on_login: false  # Show challenge field on login page
+
+# Login API configuration (optional)
+login_api:
+  enabled: true                      # Enable Cognito-style login API endpoints
 
 # Users
 users:

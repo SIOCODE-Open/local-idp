@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -10,11 +11,20 @@ import (
 )
 
 var AppConfig *IdpConfig
+var ConfigPathFlag string
+
+func init() {
+	flag.StringVar(&ConfigPathFlag, "config-path", "", "Path to configuration file")
+	flag.StringVar(&ConfigPathFlag, "c", "", "Path to configuration file (shorthand)")
+}
 
 func LoadConfig() *IdpConfig {
 	config := new(IdpConfig)
 
-	configPath := os.Getenv("CONFIG_PATH")
+	configPath := ConfigPathFlag
+	if configPath == "" {
+		configPath = os.Getenv("CONFIG_PATH")
+	}
 
 	if configPath == "" {
 		configPath = "/config.yaml"
@@ -55,6 +65,22 @@ func LoadConfig() *IdpConfig {
 	// Set default refresh token expiration if not provided (1 day)
 	if config.RefreshTokenExpirationSeconds == 0 {
 		config.RefreshTokenExpirationSeconds = 86400
+	}
+
+	// Set default OAuth2 configuration
+	if config.OAuth2.Enabled == nil {
+		trueVal := true
+		config.OAuth2.Enabled = &trueVal
+	}
+	if config.OAuth2.RequireChallengeOnLogin == nil {
+		falseVal := false
+		config.OAuth2.RequireChallengeOnLogin = &falseVal
+	}
+
+	// Set default LoginApi configuration
+	if config.LoginApi.Enabled == nil {
+		trueVal := true
+		config.LoginApi.Enabled = &trueVal
 	}
 
 	return config

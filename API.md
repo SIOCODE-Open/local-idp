@@ -2,6 +2,10 @@
 
 This document describes all API endpoints exposed by the SIOCODE Local Identity Provider.
 
+**Note:** Some endpoints can be disabled via configuration:
+- OAuth2/OIDC endpoints can be disabled by setting `oauth2.enabled: false` in the configuration
+- Login API endpoints can be disabled by setting `login_api.enabled: false` in the configuration
+
 ---
 
 ## 🧠 Health and Discovery
@@ -66,6 +70,8 @@ Returns OpenID Connect discovery metadata.
 
 ## 🔐 OAuth2 / OpenID Connect Flow
 
+**Configuration:** These endpoints are available when `oauth2.enabled: true` (default).
+
 ### `GET /oauth2/authorize`
 
 Displays a login form for the OAuth2 authorization code flow.
@@ -82,7 +88,7 @@ Displays a login form for the OAuth2 authorization code flow.
 
 **Response:**
 
-Returns an HTML login form.
+Returns an HTML login form. If `oauth2.require_challenge_on_login: true` is set in the configuration, the form will include a challenge field where users can enter any value.
 
 **Errors:**
 
@@ -106,6 +112,7 @@ Submits the login form and initiates the authorization code flow.
 | `redirect_uri` | string | Yes      | The URI to redirect to                    |
 | `scope`        | string | No       | Requested scopes                          |
 | `state`        | string | No       | Opaque value used to maintain state       |
+| `challenge`    | string | Conditional | Required if `oauth2.require_challenge_on_login: true` |
 
 **Response:**
 
@@ -180,7 +187,11 @@ Returns user information based on the provided access token (OpenID Connect User
 
 ---
 
-## 🔑 Cognito-Style Login
+## 🔑 Cognito-Style Login API
+
+**Configuration:** These endpoints are available when `login_api.enabled: true` (default).
+
+These endpoints provide a Cognito-style admin API flow with challenge/response authentication.
 
 ### `POST /login/init`
 

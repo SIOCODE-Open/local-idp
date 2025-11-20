@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"strconv"
@@ -9,6 +10,8 @@ import (
 )
 
 func main() {
+	flag.Parse()
+
 	log.SetFlags(log.LstdFlags | log.LUTC)
 	AppConfig = LoadConfig()
 	AppContext = NewAppContext()
@@ -31,15 +34,25 @@ func main() {
 	router.HandleFunc("/.well-known/openid-configuration", GET_openid_configuration).Methods("GET")
 	router.HandleFunc("/userinfo", GET_userinfo).Methods("GET")
 
-	// OAuth2 endpoints
-	router.HandleFunc("/oauth2/authorize", GET_oauth2_authorize).Methods("GET")
-	router.HandleFunc("/oauth2/authorize/submit", POST_oauth2_authorize_submit).Methods("POST")
-	router.HandleFunc("/oauth2/token", POST_oauth2_token).Methods("POST")
+	// OAuth2 endpoints (conditional based on config)
+	if *AppConfig.OAuth2.Enabled {
+		router.HandleFunc("/oauth2/authorize", GET_oauth2_authorize).Methods("GET")
+		router.HandleFunc("/oauth2/authorize/submit", POST_oauth2_authorize_submit).Methods("POST")
+		router.HandleFunc("/oauth2/token", POST_oauth2_token).Methods("POST")
+		log.Printf("OAuth2 endpoints enabled")
+	} else {
+		log.Printf("OAuth2 endpoints disabled")
+	}
 
-	// Custom authentication endpoints
-	router.HandleFunc("/login/init", POST_login_init).Methods("POST")
-	router.HandleFunc("/login/complete", POST_login_complete).Methods("POST")
-	router.HandleFunc("/login/refresh", POST_login_refresh).Methods("POST")
+	// Custom authentication endpoints (conditional based on config)
+	if *AppConfig.LoginApi.Enabled {
+		router.HandleFunc("/login/init", POST_login_init).Methods("POST")
+		router.HandleFunc("/login/complete", POST_login_complete).Methods("POST")
+		router.HandleFunc("/login/refresh", POST_login_refresh).Methods("POST")
+		log.Printf("Login API endpoints enabled")
+	} else {
+		log.Printf("Login API endpoints disabled")
+	}
 
 	// User profile endpoint
 	router.HandleFunc("/me", GET_me).Methods("GET")
