@@ -12,8 +12,12 @@ Returns a health check response.
 
 **Response:**
 ```json
-{ "status": "OK" }
-````
+{
+  "status": "OK"
+}
+```
+
+---
 
 ### `GET /.well-known/jwks.json`
 
@@ -36,6 +40,8 @@ Returns the public keys used to sign JWT tokens (JWK Set format).
 }
 ```
 
+---
+
 ### `GET /.well-known/openid-configuration`
 
 Returns OpenID Connect discovery metadata.
@@ -56,16 +62,133 @@ Returns OpenID Connect discovery metadata.
 }
 ```
 
-## 🔐 Cognito-Style Login
+---
+
+## 🔐 OAuth2 / OpenID Connect Flow
+
+### `GET /oauth2/authorize`
+
+Displays a login form for the OAuth2 authorization code flow.
+
+**Query Parameters:**
+
+| Parameter       | Type   | Required | Description                                    |
+|----------------|--------|----------|------------------------------------------------|
+| `client_id`    | string | Yes      | The client application identifier              |
+| `redirect_uri` | string | Yes      | The URI to redirect to after authentication    |
+| `response_type`| string | Yes      | Must be `"code"`                               |
+| `scope`        | string | No       | Requested scopes                               |
+| `state`        | string | No       | Opaque value used to maintain state            |
+
+**Response:**
+
+Returns an HTML login form.
+
+**Errors:**
+
+- `400 Bad Request` - If `response_type` is not `"code"` or if `client_id`/`redirect_uri` are invalid
+
+---
+
+### `POST /oauth2/authorize/submit`
+
+Submits the login form and initiates the authorization code flow.
+
+**Content-Type:** `application/x-www-form-urlencoded`
+
+**Form Parameters:**
+
+| Parameter       | Type   | Required | Description                              |
+|----------------|--------|----------|------------------------------------------|
+| `username`     | string | Yes      | The user's username                       |
+| `password`     | string | Yes      | The user's password                       |
+| `client_id`    | string | Yes      | The client application identifier         |
+| `redirect_uri` | string | Yes      | The URI to redirect to                    |
+| `scope`        | string | No       | Requested scopes                          |
+| `state`        | string | No       | Opaque value used to maintain state       |
+
+**Response:**
+
+- `302 Found` - Redirects to `redirect_uri` with authorization code: `{redirect_uri}?code={code}&state={state}`
+- Re-renders login form with error if credentials are invalid
+
+**Errors:**
+
+- `400 Bad Request` - If form data is invalid or client credentials are wrong
+- Re-displays form with error message if authentication fails
+
+---
+
+### `POST /oauth2/token`
+
+Exchanges an authorization code for access and ID tokens.
+
+**Content-Type:** `application/x-www-form-urlencoded`
+
+**Form Parameters:**
+
+| Parameter       | Type   | Required | Description                                    |
+|----------------|--------|----------|------------------------------------------------|
+| `grant_type`   | string | Yes      | Must be `"authorization_code"`                 |
+| `code`         | string | Yes      | The authorization code received from `/oauth2/authorize` |
+| `client_id`    | string | Yes      | The client application identifier              |
+| `client_secret`| string | Yes      | The client application secret                  |
+| `redirect_uri` | string | Yes      | Must match the original authorization request  |
+
+**Response:**
+
+```json
+{
+  "access_token": "eyJhbGciOiJSUzI1NiIs...",
+  "id_token": "eyJhbGciOiJSUzI1NiIs...",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+```
+
+**Errors:**
+
+- `400 Bad Request` - If form data is invalid, `grant_type` is wrong, or authorization code is invalid/expired
+- `401 Unauthorized` - If client credentials are invalid
+
+---
+
+### `GET /userinfo`
+
+Returns user information based on the provided access token (OpenID Connect UserInfo endpoint).
+
+**Headers:**
+
+| Header          | Value                  |
+|----------------|------------------------|
+| `Authorization`| `Bearer {access_token}`|
+
+**Response:**
+
+```json
+{
+  "sub": "user-id-123",
+  "email": "alice@example.com",
+  "name": "Alice Smith",
+  "...": "...other user attributes..."
+}
+```
+
+**Errors:**
+
+- `401 Unauthorized` - If token is missing, invalid, or not an access token
+
+---
+
+## 🔑 Cognito-Style Login
 
 ### `POST /login/init`
 
 Starts a login challenge.
 
-Accepts `client_id` from:
+Accepts `client_id` from JSON body or query parameter: `?client_id=...`
 
-* JSON body, or
-* Query param: `?client_id=...`
+**Content-Type:** `application/json`
 
 **Request:**
 
@@ -73,8 +196,8 @@ Accepts `client_id` from:
 {
   "username": "alice",
   "password": "password",
-  "issue_refresh_token": true,
-  "client_id": "client-id" // optional if passed via query
+  "client_id": "client-id",
+  "issue_refresh_token": true
 }
 ```
 
@@ -82,19 +205,28 @@ Accepts `client_id` from:
 
 ```json
 {
-  "challenge_id": "uuid"
+  "challenge_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
+
+**Errors:**
+
+- `400 Bad Request` - If request body is invalid or `client_id` is missing/invalid
+- `401 Unauthorized` - If credentials are invalid or user is disabled
+
+---
 
 ### `POST /login/complete`
 
 Completes login and issues tokens.
 
+**Content-Type:** `application/json`
+
 **Request:**
 
 ```json
 {
-  "challenge_id": "uuid",
+  "challenge_id": "550e8400-e29b-41d4-a716-446655440000",
   "challenge_data": "any-value"
 }
 ```
@@ -103,21 +235,33 @@ Completes login and issues tokens.
 
 ```json
 {
-  "access_token": "jwt",
-  "identity_token": "jwt",
-  "refresh_token": "opaque-string"
+  "access_token": "eyJhbGciOiJSUzI1NiIs...",
+  "identity_token": "eyJhbGciOiJSUzI1NiIs...",
+  "refresh_token": "a1b2c3d4e5f6..."
 }
 ```
 
+**Note:** `refresh_token` is only included if `issue_refresh_token` was `true` in `/login/init`.
+
+**Errors:**
+
+- `400 Bad Request` - If request body is invalid
+- `401 Unauthorized` - If challenge is invalid or expired
+- `500 Internal Server Error` - If user or client not found, or token generation fails
+
+---
+
 ### `POST /login/refresh`
 
-Issues new tokens using a valid refresh token.
+Refreshes access and identity tokens using a refresh token.
+
+**Content-Type:** `application/json`
 
 **Request:**
 
 ```json
 {
-  "refresh_token": "opaque-string"
+  "refresh_token": "a1b2c3d4e5f6..."
 }
 ```
 
@@ -125,219 +269,273 @@ Issues new tokens using a valid refresh token.
 
 ```json
 {
-  "access_token": "jwt",
-  "identity_token": "jwt",
-  "refresh_token": "opaque-string"
+  "access_token": "eyJhbGciOiJSUzI1NiIs...",
+  "identity_token": "eyJhbGciOiJSUzI1NiIs...",
+  "refresh_token": "x9y8z7w6v5u4..."
 }
 ```
+
+**Note:** A new refresh token is issued and the old one is invalidated.
+
+**Errors:**
+
+- `400 Bad Request` - If request body is invalid
+- `401 Unauthorized` - If refresh token is invalid or expired
+- `500 Internal Server Error` - If user or client not found, or token generation fails
+
+---
+
+## 👤 User Profile
 
 ### `GET /me`
 
-Returns user info based on the `Authorization: Bearer` access token.
+Returns the authenticated user's profile (without password).
+
+**Headers:**
+
+| Header          | Value                  |
+|----------------|------------------------|
+| `Authorization`| `Bearer {access_token}`|
 
 **Response:**
 
 ```json
 {
-  "id": "u1",
+  "id": "user-id-123",
   "username": "alice",
   "disabled": false,
   "attributes": {
     "email": "alice@example.com",
-    "name": "Alice"
+    "name": "Alice Smith"
   }
 }
 ```
 
-## 🧑‍💻 OAuth 2.0 / OpenID Connect
+**Errors:**
 
-### `GET /oauth2/authorize`
+- `401 Unauthorized` - If token is missing, invalid, or not an access token
+- `500 Internal Server Error` - If user not found
 
-Initiates the authorization code flow. Accepts query parameters:
+---
 
-* `response_type=code`
-* `client_id`
-* `redirect_uri`
-* `scope`
-* `state`
-
-Renders a basic login form.
-
-### `POST /oauth2/authorize/submit`
-
-Handles login form submission.
-
-**Form Fields:**
-
-* `username`
-* `password`
-* `client_id`
-* `redirect_uri`
-* `scope`
-* `state`
-
-Redirects to:
-
-```
-<redirect_uri>?code=<code>&state=<state>
-```
-
-### `POST /oauth2/token`
-
-Exchanges a valid authorization code for tokens.
-
-**Form-encoded request:**
-
-```
-grant_type=authorization_code
-code=...
-client_id=...
-client_secret=...
-redirect_uri=...
-```
-
-**Response:**
-
-```json
-{
-  "access_token": "jwt",
-  "id_token": "jwt",
-  "token_type": "Bearer",
-  "expires_in": 3600
-}
-```
-
-### `GET /userinfo`
-
-Returns claims from a valid access token.
-
-**Header:**
-
-```
-Authorization: Bearer <access_token>
-```
-
-**Response:**
-
-```json
-{
-  "sub": "user-id",
-  "email": "user@example.com",
-  "name": "User Name"
-}
-```
-
-## 🛠️ User Management (In-Memory)
+## 👥 User Management
 
 ### `GET /users`
 
-List all users.
+Returns a list of all users (without passwords).
 
 **Response:**
 
 ```json
 [
   {
-    "id": "1234",
+    "id": "user-id-123",
     "username": "alice",
     "disabled": false,
     "attributes": {
-      "email": "alice@example.com",
-      "name": "Alice"
+      "email": "alice@example.com"
+    }
+  },
+  {
+    "id": "user-id-456",
+    "username": "bob",
+    "disabled": true,
+    "attributes": {
+      "email": "bob@example.com"
     }
   }
 ]
 ```
 
-### `GET /users/:id`
+---
 
-Get a user by ID.
+### `GET /users/{id}`
+
+Returns a specific user by ID (without password).
+
+**Path Parameters:**
+
+| Parameter | Type   | Description        |
+|----------|--------|--------------------|
+| `id`     | string | The user's ID      |
 
 **Response:**
 
 ```json
 {
-  "id": "1234",
+  "id": "user-id-123",
   "username": "alice",
   "disabled": false,
   "attributes": {
     "email": "alice@example.com",
-    "name": "Alice"
+    "name": "Alice Smith"
   }
 }
 ```
 
-### `PUT /users/:id`
+**Errors:**
 
-Upserts a user by ID.
+- `404 Not Found` - If user does not exist
+
+---
+
+### `PUT /users/{id}`
+
+Creates or updates a user.
+
+**Path Parameters:**
+
+| Parameter | Type   | Description        |
+|----------|--------|--------------------|
+| `id`     | string | The user's ID      |
+
+**Content-Type:** `application/json`
 
 **Request:**
 
 ```json
 {
   "username": "alice",
-  "password": "password",
+  "password": "new-password",
   "attributes": {
     "email": "alice@example.com",
-    "name": "Alice"
+    "name": "Alice Smith"
   }
 }
 ```
 
-**Response:**
+**Note:** All fields are optional when updating an existing user. Only provided fields will be updated.
 
-* `204 No Content` on success
-
-### `POST /users/:id/disable`
-
-Disables the user (login blocked).
-
-**Response:**
-
-* `204 No Content` or `404 Not Found`
-
-### `POST /users/:id/enable`
-
-Enables a previously disabled user.
-
-**Response:**
-
-* `204 No Content` or `404 Not Found`
-
-### `DELETE /users/:id`
-
-Deletes the user from memory.
-
-**Response:**
-
-* `204 No Content` or `404 Not Found`
-
-## 📦 Token Format
-
-All access and ID tokens are JWTs (`RS256`), containing:
+**Response (Update):**
 
 ```json
 {
-  "sub": "user-id",
-  "aud": "client-id",
-  "iss": "http://localhost:8080",
-  "iat": 1710000000,
-  "exp": 1710003600,
-  "token_use": "access", // or "id"
-  "auth_time": 1710000000,
-  "client_id": "client-id",
-  "jti": "uuid"
+  "id": "user-id-123",
+  "username": "alice",
+  "password": "new-password",
+  "disabled": false,
+  "attributes": {
+    "email": "alice@example.com",
+    "name": "Alice Smith"
+  }
 }
 ```
 
-Refresh tokens are opaque 32-byte base64url strings.
+**Response (Create):**
 
-## 🔐 Notes
+Returns the created user with status `201 Created`.
 
-* All state is **in-memory only**
-* Ideal for **testing, dev, and CI**
-* **Do not use in production**
+```json
+{
+  "id": "user-id-123",
+  "username": "alice",
+  "disabled": false,
+  "attributes": {
+    "email": "alice@example.com"
+  }
+}
+```
 
-## 📄 License
+**Errors:**
 
-MIT © SIOCODE
+- `400 Bad Request` - If request body is invalid
+
+---
+
+### `POST /users/{id}/disable`
+
+Disables a user account.
+
+**Path Parameters:**
+
+| Parameter | Type   | Description        |
+|----------|--------|--------------------|
+| `id`     | string | The user's ID      |
+
+**Response:**
+
+- `204 No Content` - User successfully disabled
+
+**Errors:**
+
+- `404 Not Found` - If user does not exist
+
+---
+
+### `POST /users/{id}/enable`
+
+Enables a user account.
+
+**Path Parameters:**
+
+| Parameter | Type   | Description        |
+|----------|--------|--------------------|
+| `id`     | string | The user's ID      |
+
+**Response:**
+
+- `204 No Content` - User successfully enabled
+
+**Errors:**
+
+- `404 Not Found` - If user does not exist
+
+---
+
+### `DELETE /users/{id}`
+
+Deletes a user.
+
+**Path Parameters:**
+
+| Parameter | Type   | Description        |
+|----------|--------|--------------------|
+| `id`     | string | The user's ID      |
+
+**Response:**
+
+```json
+{
+  "message": "User deleted"
+}
+```
+
+**Errors:**
+
+- `404 Not Found` - If user does not exist
+
+---
+
+## 📋 Response Codes Summary
+
+| Code | Description                                                      |
+|------|------------------------------------------------------------------|
+| 200  | Success - Request completed successfully                          |
+| 201  | Created - Resource created successfully                           |
+| 204  | No Content - Success with no response body                        |
+| 302  | Found - Redirect (used in OAuth2 flow)                           |
+| 400  | Bad Request - Invalid request format or parameters               |
+| 401  | Unauthorized - Authentication failed or token invalid            |
+| 404  | Not Found - Resource does not exist                              |
+| 500  | Internal Server Error - Server encountered an error              |
+
+---
+
+## 🔒 Authentication
+
+Most endpoints require authentication via Bearer token:
+
+```http
+Authorization: Bearer {access_token}
+```
+
+Access tokens are JWT tokens signed with RS256. They contain:
+- `sub` - User ID
+- `token_use` - Token type (`"access"` or `"id"`)
+- `client_id` - Client ID
+- `aud` - Audience (client's audience value)
+- `iss` - Issuer
+- `exp` - Expiration timestamp
+- `iat` - Issued at timestamp
+
+Identity tokens (ID tokens) contain similar claims plus user attributes.

@@ -76,10 +76,11 @@ func POST_login_complete(w http.ResponseWriter, r *http.Request) {
 	// Generate refresh token if requested
 	if pendingLogin.IssueRefreshToken {
 		refreshToken := generateRandomToken()
+		refreshExpirationDuration := time.Duration(AppConfig.RefreshTokenExpirationSeconds) * time.Second
 		AppContext.RefreshTokens[refreshToken] = IssuedRefreshToken{
 			UserId:    foundUser.Id,
 			ClientId:  foundClient.Id,
-			ExpiresAt: time.Now().Add(RefreshExpiry),
+			ExpiresAt: time.Now().Add(refreshExpirationDuration),
 		}
 		response.RefreshToken = refreshToken
 	}

@@ -12,8 +12,6 @@ import (
 const (
 	TokenUseAccess  = "access"
 	TokenUseId      = "id"
-	TokenExpiry     = 1 * time.Hour
-	RefreshExpiry   = 30 * 24 * time.Hour // 30 days
 	ChallengeExpiry = 5 * time.Minute
 )
 
@@ -28,12 +26,13 @@ func generateRandomToken() string {
 func generateAccessToken(user *IdpUser, client *IdpClient) (string, error) {
 	now := time.Now()
 	jwksKey := AppContext.JwksKeys[0]
+	expirationDuration := time.Duration(AppConfig.AccessTokenExpirationSeconds) * time.Second
 	claims := jwt.MapClaims{
 		"sub":       user.Id,
 		"iss":       AppConfig.Issuer,
 		"aud":       client.Audience,
 		"iat":       now.Unix(),
-		"exp":       now.Add(TokenExpiry).Unix(),
+		"exp":       now.Add(expirationDuration).Unix(),
 		"auth_time": now.Unix(),
 		"token_use": TokenUseAccess,
 		"client_id": client.Id,
@@ -50,11 +49,12 @@ func generateAccessToken(user *IdpUser, client *IdpClient) (string, error) {
 func generateIdentityToken(user *IdpUser, client *IdpClient) (string, error) {
 	now := time.Now()
 	jwksKey := AppContext.JwksKeys[0]
+	expirationDuration := time.Duration(AppConfig.AccessTokenExpirationSeconds) * time.Second
 	claims := jwt.MapClaims{
 		"sub":       user.Id,
 		"iss":       AppConfig.Issuer,
 		"iat":       now.Unix(),
-		"exp":       now.Add(TokenExpiry).Unix(),
+		"exp":       now.Add(expirationDuration).Unix(),
 		"auth_time": now.Unix(),
 		"token_use": TokenUseId,
 		"client_id": client.Id,

@@ -18,11 +18,13 @@ type IdpClient struct {
 }
 
 type IdpConfig struct {
-	Port    int         `json:"port"`
-	Issuer  string      `json:"issuer,omitempty"`
-	BaseUrl string      `json:"base_url,omitempty"`
-	Users   []IdpUser   `json:"users"`
-	Clients []IdpClient `json:"clients"`
+	Port                          int         `json:"port"`
+	Issuer                        string      `json:"issuer,omitempty"`
+	BaseUrl                       string      `json:"base_url,omitempty"`
+	AccessTokenExpirationSeconds  int         `json:"access_token_expiration_seconds,omitempty"`
+	RefreshTokenExpirationSeconds int         `json:"refresh_token_expiration_seconds,omitempty"`
+	Users                         []IdpUser   `json:"users"`
+	Clients                       []IdpClient `json:"clients"`
 }
 
 type IdpInitLoginRequest struct {

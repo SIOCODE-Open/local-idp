@@ -70,10 +70,11 @@ func POST_login_refresh(w http.ResponseWriter, r *http.Request) {
 
 	// Generate new refresh token
 	newRefreshToken := generateRandomToken()
+	refreshExpirationDuration := time.Duration(AppConfig.RefreshTokenExpirationSeconds) * time.Second
 	AppContext.RefreshTokens[newRefreshToken] = IssuedRefreshToken{
 		UserId:    foundUser.Id,
 		ClientId:  foundClient.Id,
-		ExpiresAt: time.Now().Add(RefreshExpiry),
+		ExpiresAt: time.Now().Add(refreshExpirationDuration),
 	}
 
 	// Remove old refresh token

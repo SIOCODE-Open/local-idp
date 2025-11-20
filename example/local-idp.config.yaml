@@ -1,4 +1,6 @@
 port: 8080
+access_token_expiration_seconds: 900    # 15 minutes
+refresh_token_expiration_seconds: 86400 # 1 day
 users:
   - id: "1"
     username: "user1"

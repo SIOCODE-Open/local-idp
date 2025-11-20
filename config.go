@@ -47,5 +47,15 @@ func LoadConfig() *IdpConfig {
 		config.Issuer = fmt.Sprintf("http://localhost:%d", config.Port)
 	}
 
+	// Set default access token expiration if not provided (15 minutes)
+	if config.AccessTokenExpirationSeconds == 0 {
+		config.AccessTokenExpirationSeconds = 900
+	}
+
+	// Set default refresh token expiration if not provided (1 day)
+	if config.RefreshTokenExpirationSeconds == 0 {
+		config.RefreshTokenExpirationSeconds = 86400
+	}
+
 	return config
 }

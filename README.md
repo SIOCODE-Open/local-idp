@@ -37,6 +37,8 @@ Available for:
 
 YAML configuration is passed via `CONFIG_PATH` env var or defaults to `/config.yaml`.
 
+See [`CONFIG.md`](./CONFIG.md) for full details.
+
 ### Example: `example/local-idp.config.yaml`
 
 ```yaml

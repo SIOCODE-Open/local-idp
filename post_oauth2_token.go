@@ -101,7 +101,7 @@ func POST_oauth2_token(w http.ResponseWriter, r *http.Request) {
 		AccessToken: accessToken,
 		IDToken:     idToken,
 		TokenType:   "Bearer",
-		ExpiresIn:   3600, // 1 hour
+		ExpiresIn:   AppConfig.AccessTokenExpirationSeconds,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
