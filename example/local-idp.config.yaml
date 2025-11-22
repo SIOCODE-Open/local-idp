@@ -12,6 +12,18 @@ oauth2:
 login_api:
   enabled: true                      # Enable Cognito-style login API endpoints
 
+# Map user attributes to access token claims (optional)
+# Syntax: claim_name: attribute_name
+map_access_token_claims:
+  roles: role_name  # Maps user attribute "role_name" to claim "roles"
+
+# Map user attributes to identity token claims (optional)
+# Syntax: claim_name: attribute_name
+# If not specified, all user attributes are included in the identity token
+map_identity_token_claims:
+  email: email      # Maps user attribute "email" to claim "email"
+  roles: role_name  # Maps user attribute "role_name" to claim "roles"
+
 users:
   - id: "1"
     username: "user1"

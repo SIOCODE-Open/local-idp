@@ -18,25 +18,29 @@ type IdpClient struct {
 }
 
 type OAuth2Config struct {
-	Enabled                 *bool `json:"enabled,omitempty"`
-	RequireChallengeOnLogin *bool `json:"require_challenge_on_login,omitempty"`
+	Enabled                 *bool  `json:"enabled,omitempty"`
+	RequireChallengeOnLogin *bool  `json:"require_challenge_on_login,omitempty"`
+	DefaultScopes           string `json:"default_scopes,omitempty"`
 }
 
 type LoginApiConfig struct {
-	Enabled *bool `json:"enabled,omitempty"`
+	Enabled       *bool  `json:"enabled,omitempty"`
+	DefaultScopes string `json:"default_scopes,omitempty"`
 }
 
 type IdpConfig struct {
-	Port                          int            `json:"port"`
-	Issuer                        string         `json:"issuer,omitempty"`
-	BaseUrl                       string         `json:"base_url,omitempty"`
-	AccessTokenExpirationSeconds  int            `json:"access_token_expiration_seconds,omitempty"`
-	RefreshTokenExpirationSeconds int            `json:"refresh_token_expiration_seconds,omitempty"`
-	AllowedOrigins                string         `json:"allowed_origins,omitempty"`
-	OAuth2                        OAuth2Config   `json:"oauth2,omitempty"`
-	LoginApi                      LoginApiConfig `json:"login_api,omitempty"`
-	Users                         []IdpUser      `json:"users"`
-	Clients                       []IdpClient    `json:"clients"`
+	Port                          int               `json:"port"`
+	Issuer                        string            `json:"issuer,omitempty"`
+	BaseUrl                       string            `json:"base_url,omitempty"`
+	AccessTokenExpirationSeconds  int               `json:"access_token_expiration_seconds,omitempty"`
+	RefreshTokenExpirationSeconds int               `json:"refresh_token_expiration_seconds,omitempty"`
+	AllowedOrigins                string            `json:"allowed_origins,omitempty"`
+	OAuth2                        OAuth2Config      `json:"oauth2,omitempty"`
+	LoginApi                      LoginApiConfig    `json:"login_api,omitempty"`
+	MapAccessTokenClaims          map[string]string `json:"map_access_token_claims,omitempty"`
+	MapIdentityTokenClaims        map[string]string `json:"map_identity_token_claims,omitempty"`
+	Users                         []IdpUser         `json:"users"`
+	Clients                       []IdpClient       `json:"clients"`
 }
 
 type IdpInitLoginRequest struct {
@@ -44,6 +48,7 @@ type IdpInitLoginRequest struct {
 	Password          string `json:"password"`
 	ClientId          string `json:"client_id"`
 	IssueRefreshToken bool   `json:"issue_refresh_token"`
+	Scopes            string `json:"scopes,omitempty"`
 }
 
 type IdpInitLoginResponse struct {

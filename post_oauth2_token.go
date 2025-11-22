@@ -88,13 +88,13 @@ func POST_oauth2_token(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate tokens
-	accessToken, err := generateAccessToken(foundUser, foundClient)
+	accessToken, err := generateAccessToken(foundUser, foundClient, authCode.Scopes)
 	if err != nil {
 		http.Error(w, "Failed to generate access token", http.StatusInternalServerError)
 		return
 	}
 
-	idToken, err := generateIdentityToken(foundUser, foundClient)
+	idToken, err := generateIdentityToken(foundUser, foundClient, authCode.Nonce)
 	if err != nil {
 		http.Error(w, "Failed to generate ID token", http.StatusInternalServerError)
 		return

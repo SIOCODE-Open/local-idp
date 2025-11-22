@@ -21,6 +21,7 @@ func POST_oauth2_authorize_submit(w http.ResponseWriter, r *http.Request) {
 	redirectURI := r.Form.Get("redirect_uri")
 	scope := r.Form.Get("scope")
 	state := r.Form.Get("state")
+	nonce := r.Form.Get("nonce")
 	challenge := r.Form.Get("challenge")
 
 	// Validate challenge if required
@@ -38,6 +39,7 @@ func POST_oauth2_authorize_submit(w http.ResponseWriter, r *http.Request) {
 			RedirectURI:   redirectURI,
 			Scope:         scope,
 			State:         state,
+			Nonce:         nonce,
 			ShowChallenge: *AppConfig.OAuth2.RequireChallengeOnLogin,
 		}
 
@@ -85,6 +87,7 @@ func POST_oauth2_authorize_submit(w http.ResponseWriter, r *http.Request) {
 			RedirectURI:   redirectURI,
 			Scope:         scope,
 			State:         state,
+			Nonce:         nonce,
 			ShowChallenge: *AppConfig.OAuth2.RequireChallengeOnLogin,
 		}
 
@@ -104,6 +107,8 @@ func POST_oauth2_authorize_submit(w http.ResponseWriter, r *http.Request) {
 		UserId:      foundUser.Id,
 		ClientId:    clientID,
 		RedirectUri: redirectURI,
+		Nonce:       nonce,
+		Scopes:      scope,
 		ExpiresAt:   time.Now().Add(10 * time.Minute), // 10 minute expiry
 	}
 

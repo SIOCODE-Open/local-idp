@@ -12,12 +12,14 @@ type PendingLogin struct {
 	UserId            string
 	ClientId          string
 	IssueRefreshToken bool
+	Scopes            string
 	CreatedAt         time.Time
 }
 
 type IssuedRefreshToken struct {
 	UserId    string
 	ClientId  string
+	Scopes    string
 	ExpiresAt time.Time
 }
 
@@ -26,6 +28,8 @@ type OauthPendingAuthorization struct {
 	UserId      string
 	ClientId    string
 	RedirectUri string
+	Nonce       string
+	Scopes      string
 	ExpiresAt   time.Time
 }
 

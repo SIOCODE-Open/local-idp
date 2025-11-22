@@ -81,11 +81,17 @@ func LoadConfig() *IdpConfig {
 		falseVal := false
 		config.OAuth2.RequireChallengeOnLogin = &falseVal
 	}
+	if config.OAuth2.DefaultScopes == "" {
+		config.OAuth2.DefaultScopes = "openid profile"
+	}
 
 	// Set default LoginApi configuration
 	if config.LoginApi.Enabled == nil {
 		trueVal := true
 		config.LoginApi.Enabled = &trueVal
+	}
+	if config.LoginApi.DefaultScopes == "" {
+		config.LoginApi.DefaultScopes = "openid profile"
 	}
 
 	return config

@@ -177,12 +177,29 @@ Whether to show and require a challenge field on the login page.
 
 When enabled, the login form will display an additional challenge input field. Users can enter any value (this is a dummy challenge for testing purposes). This can be useful for testing applications that expect additional authentication factors.
 
+##### `default_scopes` (string, optional)
+
+Default OAuth2 scopes to use when no scope parameter is provided in the authorization request.
+
+- **Type**: String
+- **Default**: `"openid profile"`
+- **Example**: `default_scopes: "openid profile email"`
+
+When a client initiates an OAuth2 authorization flow without specifying the `scope` parameter, this default value will be used. The scopes are space-separated and will be included in the issued access tokens.
+
+Common scope values:
+- `openid` - Required for OpenID Connect flows, enables ID token issuance
+- `profile` - Access to user profile information
+- `email` - Access to user email address
+- Custom scopes specific to your application
+
 #### OAuth2 Example
 
 ```yaml
 oauth2:
   enabled: true
   require_challenge_on_login: false
+  default_scopes: "openid profile email"
 ```
 
 ---
@@ -211,12 +228,150 @@ When enabled, the following endpoints are available:
 
 When disabled, these endpoints will not be registered.
 
+##### `default_scopes` (string, optional)
+
+Default OAuth2 scopes to use when no scopes are provided in the login API request.
+
+- **Type**: String
+- **Default**: `"openid profile"`
+- **Example**: `default_scopes: "openid profile email"`
+
+When a client calls `POST /login/init` without specifying the `scopes` field in the request body, this default value will be used. The scopes are space-separated and will be included in the issued access tokens. The scopes are preserved throughout the entire authentication flow, including when refresh tokens are used.
+
+Common scope values:
+- `openid` - Required for OpenID Connect flows, enables ID token issuance
+- `profile` - Access to user profile information
+- `email` - Access to user email address
+- Custom scopes specific to your application
+
 #### LoginApi Example
 
 ```yaml
 login_api:
   enabled: true
+  default_scopes: "openid profile email"
 ```
+
+---
+
+### `map_access_token_claims` (object, optional)
+
+Configuration for mapping user attributes to claims in access tokens.
+
+- **Type**: Object (map of string keys to string values)
+- **Default**: Empty/not set (no custom claim mapping)
+- **Example**:
+  ```yaml
+  map_access_token_claims:
+    roles: role_name
+    department: dept
+  ```
+
+This configuration allows you to selectively map user attributes to claims in access tokens. Each key-value pair in this object represents a mapping:
+- **Key**: The name of the claim to include in the access token
+- **Value**: The name of the user attribute to read from
+
+**Behavior:**
+- Only specified attributes are mapped to access token claims
+- If a user attribute does not exist, the claim is omitted from the token
+- Standard JWT claims (`sub`, `iss`, `aud`, `iat`, `exp`, `auth_time`, `token_use`, `client_id`, `scope`, `jti`) are always included
+- If this configuration is not provided or is empty, no custom claims are added to access tokens
+
+**Example Configuration:**
+
+```yaml
+map_access_token_claims:
+  roles: role_name      # Maps user.attributes.role_name to access token claim "roles"
+  email: email          # Maps user.attributes.email to access token claim "email"
+  org: organization     # Maps user.attributes.organization to access token claim "org"
+```
+
+**Example Access Token Claims:**
+
+Given the configuration above and a user with attributes:
+```yaml
+attributes:
+  role_name: "admin"
+  email: "user@example.com"
+  organization: "engineering"
+```
+
+The resulting access token will contain:
+```json
+{
+  "sub": "user-id",
+  "iss": "http://localhost:8080",
+  "aud": "example.com",
+  "roles": "admin",
+  "email": "user@example.com",
+  "org": "engineering",
+  ...
+}
+```
+
+---
+
+### `map_identity_token_claims` (object, optional)
+
+Configuration for mapping user attributes to claims in identity (ID) tokens.
+
+- **Type**: Object (map of string keys to string values)
+- **Default**: Empty/not set (all user attributes are included)
+- **Example**:
+  ```yaml
+  map_identity_token_claims:
+    email: email
+    name: full_name
+    roles: role_name
+  ```
+
+This configuration allows you to selectively map user attributes to claims in identity tokens. Each key-value pair in this object represents a mapping:
+- **Key**: The name of the claim to include in the identity token
+- **Value**: The name of the user attribute to read from
+
+**Behavior:**
+- If configured: Only specified attributes are mapped to identity token claims
+- If not configured: All user attributes are automatically included in identity tokens (legacy behavior)
+- If a user attribute does not exist, the claim is omitted from the token
+- Standard JWT claims (`sub`, `iss`, `aud`, `iat`, `exp`, `auth_time`, `token_use`, `client_id`, `jti`, `nonce`) are always included
+
+**Example Configuration:**
+
+```yaml
+map_identity_token_claims:
+  email: email          # Maps user.attributes.email to identity token claim "email"
+  name: full_name       # Maps user.attributes.full_name to identity token claim "name"
+  roles: role_name      # Maps user.attributes.role_name to identity token claim "roles"
+  picture: avatar_url   # Maps user.attributes.avatar_url to identity token claim "picture"
+```
+
+**Example Identity Token Claims:**
+
+Given the configuration above and a user with attributes:
+```yaml
+attributes:
+  email: "user@example.com"
+  full_name: "John Doe"
+  role_name: "admin"
+  avatar_url: "https://example.com/avatar.jpg"
+  internal_id: "12345"  # This will NOT be included in the token
+```
+
+The resulting identity token will contain:
+```json
+{
+  "sub": "user-id",
+  "iss": "http://localhost:8080",
+  "aud": "example.com",
+  "email": "user@example.com",
+  "name": "John Doe",
+  "roles": "admin",
+  "picture": "https://example.com/avatar.jpg",
+  ...
+}
+```
+
+Note that `internal_id` is not included because it's not in the mapping configuration.
 
 ---
 

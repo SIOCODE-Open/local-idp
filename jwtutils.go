@@ -23,10 +23,16 @@ func generateRandomToken() string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
-func generateAccessToken(user *IdpUser, client *IdpClient) (string, error) {
+func generateAccessToken(user *IdpUser, client *IdpClient, scopes string) (string, error) {
 	now := time.Now()
 	jwksKey := AppContext.JwksKeys[0]
 	expirationDuration := time.Duration(AppConfig.AccessTokenExpirationSeconds) * time.Second
+
+	// Use provided scopes or fallback to default
+	if scopes == "" {
+		scopes = "openid profile"
+	}
+
 	claims := jwt.MapClaims{
 		"sub":       user.Id,
 		"iss":       AppConfig.Issuer,
@@ -36,8 +42,17 @@ func generateAccessToken(user *IdpUser, client *IdpClient) (string, error) {
 		"auth_time": now.Unix(),
 		"token_use": TokenUseAccess,
 		"client_id": client.Id,
-		"scope":     "openid profile",
+		"scope":     scopes,
 		"jti":       generateRandomToken(),
+	}
+
+	// Map user attributes to claims if configured
+	if AppConfig.MapAccessTokenClaims != nil {
+		for claimName, attributeName := range AppConfig.MapAccessTokenClaims {
+			if attributeValue, exists := user.Attributes[attributeName]; exists {
+				claims[claimName] = attributeValue
+			}
+		}
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
@@ -46,7 +61,7 @@ func generateAccessToken(user *IdpUser, client *IdpClient) (string, error) {
 	return token.SignedString(jwksKey.PrivateKey)
 }
 
-func generateIdentityToken(user *IdpUser, client *IdpClient) (string, error) {
+func generateIdentityToken(user *IdpUser, client *IdpClient, nonce string) (string, error) {
 	now := time.Now()
 	jwksKey := AppContext.JwksKeys[0]
 	expirationDuration := time.Duration(AppConfig.AccessTokenExpirationSeconds) * time.Second
@@ -62,9 +77,23 @@ func generateIdentityToken(user *IdpUser, client *IdpClient) (string, error) {
 		"jti":       generateRandomToken(),
 	}
 
-	// Add user attributes
-	for k, v := range user.Attributes {
-		claims[k] = v
+	// Add nonce if provided
+	if nonce != "" {
+		claims["nonce"] = nonce
+	}
+
+	// Map user attributes to claims if configured
+	if AppConfig.MapIdentityTokenClaims != nil {
+		for claimName, attributeName := range AppConfig.MapIdentityTokenClaims {
+			if attributeValue, exists := user.Attributes[attributeName]; exists {
+				claims[claimName] = attributeValue
+			}
+		}
+	} else {
+		// Fallback: Add all user attributes if no mapping is configured
+		for k, v := range user.Attributes {
+			claims[k] = v
+		}
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)

@@ -56,13 +56,13 @@ func POST_login_complete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate tokens
-	accessToken, err := generateAccessToken(foundUser, foundClient)
+	accessToken, err := generateAccessToken(foundUser, foundClient, pendingLogin.Scopes)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to generate access token"})
 		return
 	}
 
-	identityToken, err := generateIdentityToken(foundUser, foundClient)
+	identityToken, err := generateIdentityToken(foundUser, foundClient, "")
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to generate identity token"})
 		return
@@ -80,6 +80,7 @@ func POST_login_complete(w http.ResponseWriter, r *http.Request) {
 		AppContext.RefreshTokens[refreshToken] = IssuedRefreshToken{
 			UserId:    foundUser.Id,
 			ClientId:  foundClient.Id,
+			Scopes:    pendingLogin.Scopes,
 			ExpiresAt: time.Now().Add(refreshExpirationDuration),
 		}
 		response.RefreshToken = refreshToken

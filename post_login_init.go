@@ -59,6 +59,13 @@ func POST_login_init(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Determine scopes to use
+	scopes := req.Scopes
+	if scopes == "" {
+		// Use default scopes from config
+		scopes = AppConfig.LoginApi.DefaultScopes
+	}
+
 	// Generate challenge ID
 	challengeId := uuid.NewString()
 
@@ -67,6 +74,7 @@ func POST_login_init(w http.ResponseWriter, r *http.Request) {
 		UserId:            foundUser.Id,
 		ClientId:          foundClient.Id,
 		IssueRefreshToken: req.IssueRefreshToken,
+		Scopes:            scopes,
 		CreatedAt:         time.Now(),
 	}
 

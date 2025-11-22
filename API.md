@@ -83,8 +83,9 @@ Displays a login form for the OAuth2 authorization code flow.
 | `client_id`    | string | Yes      | The client application identifier              |
 | `redirect_uri` | string | Yes      | The URI to redirect to after authentication    |
 | `response_type`| string | Yes      | Must be `"code"`                               |
-| `scope`        | string | No       | Requested scopes                               |
+| `scope`        | string | No       | Space-separated list of requested scopes. If not provided, defaults to `oauth2.default_scopes` from configuration (default: `"openid profile"`) |
 | `state`        | string | No       | Opaque value used to maintain state            |
+| `nonce`        | string | No       | String value to associate client session with ID Token and mitigate replay attacks |
 
 **Response:**
 
@@ -110,8 +111,9 @@ Submits the login form and initiates the authorization code flow.
 | `password`     | string | Yes      | The user's password                       |
 | `client_id`    | string | Yes      | The client application identifier         |
 | `redirect_uri` | string | Yes      | The URI to redirect to                    |
-| `scope`        | string | No       | Requested scopes                          |
+| `scope`        | string | No       | Space-separated list of requested scopes (passed through from authorization request) |
 | `state`        | string | No       | Opaque value used to maintain state       |
+| `nonce`        | string | No       | String value to associate client session with ID Token (passed through from authorization request) |
 | `challenge`    | string | Conditional | Required if `oauth2.require_challenge_on_login: true` |
 
 **Response:**
@@ -162,6 +164,42 @@ Public clients are typically used for:
   "expires_in": 3600
 }
 ```
+
+**Scope Tracking:**
+
+The OAuth2 flow properly tracks and preserves scopes throughout the authorization process:
+1. Scopes are captured from the `scope` parameter in `GET /oauth2/authorize` (or defaults to `oauth2.default_scopes` from configuration)
+2. Stored with the authorization code after successful authentication
+3. Retrieved and included in the access token when exchanging the code at this endpoint
+4. The `scope` claim in the access token reflects the exact scopes that were requested during authorization
+
+**Access Token Claims:**
+
+The `access_token` is a JWT containing the following claims:
+- `iss` (issuer) - The identity provider's issuer URL
+- `sub` (subject) - The user's unique identifier
+- `aud` (audience) - The client's audience value
+- `exp` (expiration) - Token expiration timestamp
+- `iat` (issued at) - Token issuance timestamp
+- `auth_time` - Time when user authentication occurred
+- `token_use` - Set to `"access"` for access tokens
+- `client_id` - The client identifier
+- `scope` - Space-separated list of granted scopes
+- `jti` - Unique token identifier
+
+**ID Token Claims:**
+
+The `id_token` is a JWT containing the following claims:
+- `iss` (issuer) - The identity provider's issuer URL
+- `sub` (subject) - The user's unique identifier
+- `aud` (audience) - The client's audience value
+- `exp` (expiration) - Token expiration timestamp
+- `iat` (issued at) - Token issuance timestamp
+- `auth_time` - Time when user authentication occurred
+- `token_use` - Set to `"id"` for ID tokens
+- `client_id` - The client identifier
+- `nonce` - If provided in the authorization request, this value will be included in the ID token
+- Additional user attributes from the user's profile
 
 **Errors:**
 
@@ -218,9 +256,30 @@ Accepts `client_id` from JSON body or query parameter: `?client_id=...`
   "username": "alice",
   "password": "password",
   "client_id": "client-id",
-  "issue_refresh_token": true
+  "issue_refresh_token": true,
+  "scopes": "openid profile email"
 }
 ```
+
+**Request Fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `username` | string | Yes | The user's username |
+| `password` | string | Yes | The user's password |
+| `client_id` | string | Yes | The client application identifier (can also be provided as query parameter) |
+| `issue_refresh_token` | boolean | No | Whether to issue a refresh token (default: false) |
+| `scopes` | string | No | Space-separated list of requested scopes. If not provided, defaults to `login_api.default_scopes` from configuration (default: `"openid profile"`) |
+
+**Scope Tracking:**
+
+The scopes provided in this request (or the default scopes from configuration) are stored with the challenge and persist throughout the entire authentication flow:
+1. Stored with the challenge after `/login/init`
+2. Used when generating tokens in `/login/complete`
+3. Preserved in refresh tokens
+4. Reused when refreshing tokens via `/login/refresh`
+
+This ensures that the same scopes are consistently applied to all tokens issued for a particular authentication session.
 
 **Response:**
 

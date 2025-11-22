@@ -29,6 +29,7 @@ const loginFormTemplate = `
         <input type="hidden" name="redirect_uri" value="{{.RedirectURI}}">
         <input type="hidden" name="scope" value="{{.Scope}}">
         <input type="hidden" name="state" value="{{.State}}">
+        <input type="hidden" name="nonce" value="{{.Nonce}}">
         
         <div class="form-group">
             <label for="username">Username:</label>
@@ -59,6 +60,7 @@ type loginFormData struct {
 	RedirectURI   string
 	Scope         string
 	State         string
+	Nonce         string
 	ShowChallenge bool
 }
 
@@ -69,6 +71,7 @@ func GET_oauth2_authorize(w http.ResponseWriter, r *http.Request) {
 	responseType := r.URL.Query().Get("response_type")
 	scope := r.URL.Query().Get("scope")
 	state := r.URL.Query().Get("state")
+	nonce := r.URL.Query().Get("nonce")
 
 	// Validate response_type
 	if responseType != "code" {
@@ -90,6 +93,11 @@ func GET_oauth2_authorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Use default scopes if not provided
+	if scope == "" {
+		scope = AppConfig.OAuth2.DefaultScopes
+	}
+
 	// Parse and render the template
 	tmpl, err := template.New("login").Parse(loginFormTemplate)
 	if err != nil {
@@ -102,6 +110,7 @@ func GET_oauth2_authorize(w http.ResponseWriter, r *http.Request) {
 		RedirectURI:   redirectURI,
 		Scope:         scope,
 		State:         state,
+		Nonce:         nonce,
 		ShowChallenge: *AppConfig.OAuth2.RequireChallengeOnLogin,
 	}
 
