@@ -32,6 +32,7 @@ type IdpConfig struct {
 	BaseUrl                       string         `json:"base_url,omitempty"`
 	AccessTokenExpirationSeconds  int            `json:"access_token_expiration_seconds,omitempty"`
 	RefreshTokenExpirationSeconds int            `json:"refresh_token_expiration_seconds,omitempty"`
+	AllowedOrigins                string         `json:"allowed_origins,omitempty"`
 	OAuth2                        OAuth2Config   `json:"oauth2,omitempty"`
 	LoginApi                      LoginApiConfig `json:"login_api,omitempty"`
 	Users                         []IdpUser      `json:"users"`

@@ -35,7 +35,14 @@ func POST_oauth2_token(w http.ResponseWriter, r *http.Request) {
 	// Validate client credentials
 	var foundClient *IdpClient
 	for i, client := range AppContext.Clients {
-		if client.Id == clientID && client.Secret == clientSecret {
+		if client.Id == clientID {
+			// If client has a secret configured, validate it
+			if client.Secret != "" {
+				if client.Secret != clientSecret {
+					continue
+				}
+			}
+			// Client matched (either secret validated or public client)
 			foundClient = &AppContext.Clients[i]
 			break
 		}

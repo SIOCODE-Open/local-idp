@@ -1,6 +1,7 @@
 port: 8080
 access_token_expiration_seconds: 900    # 15 minutes
 refresh_token_expiration_seconds: 86400 # 1 day
+allowed_origins: "*"                    # CORS allowed origins (optional, defaults to *)
 
 # OAuth2 configuration (optional, defaults shown)
 oauth2:
@@ -25,7 +26,13 @@ users:
       role_name: "user"
       email: "user2@example.com"
 clients:
+  # Confidential client (backend server) - requires secret
   - id: "client1"
     audience: "example.com"
     secret: "super_secret"
+    redirect_uri: "http://localhost:3000/callback"
+  
+  # Public client (SPA/Mobile) - no secret required
+  - id: "public-client"
+    audience: "example.com"
     redirect_uri: "http://localhost:3000/callback"

@@ -139,8 +139,18 @@ Exchanges an authorization code for access and ID tokens.
 | `grant_type`   | string | Yes      | Must be `"authorization_code"`                 |
 | `code`         | string | Yes      | The authorization code received from `/oauth2/authorize` |
 | `client_id`    | string | Yes      | The client application identifier              |
-| `client_secret`| string | Yes      | The client application secret                  |
+| `client_secret`| string | Conditional | The client application secret (required for confidential clients, omit for public clients) |
 | `redirect_uri` | string | Yes      | Must match the original authorization request  |
+
+**Client Types:**
+
+- **Confidential clients**: Have a `secret` configured. Must provide `client_secret` parameter.
+- **Public clients**: No `secret` configured (empty or omitted in config). Do NOT provide `client_secret` parameter.
+
+Public clients are typically used for:
+- Single Page Applications (SPAs)
+- Mobile applications
+- Any client-side application where secrets cannot be securely stored
 
 **Response:**
 

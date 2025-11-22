@@ -67,6 +67,11 @@ func LoadConfig() *IdpConfig {
 		config.RefreshTokenExpirationSeconds = 86400
 	}
 
+	// Set default allowed origins if not provided
+	if config.AllowedOrigins == "" {
+		config.AllowedOrigins = "*"
+	}
+
 	// Set default OAuth2 configuration
 	if config.OAuth2.Enabled == nil {
 		trueVal := true

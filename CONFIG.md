@@ -121,6 +121,28 @@ This value determines how long refresh tokens remain valid before they must be r
 
 ---
 
+### `allowed_origins` (string, optional)
+
+The allowed origins for Cross-Origin Resource Sharing (CORS) requests.
+
+- **Type**: String
+- **Default**: `*` (all origins allowed)
+- **Example**: `allowed_origins: http://localhost:3000`
+
+This value configures CORS headers for cross-origin requests. The server will:
+- Set the `Access-Control-Allow-Origin` header to the configured value
+- Handle preflight OPTIONS requests automatically
+- Allow credentials for cross-origin requests
+
+For multiple origins, separate them with commas or use a wildcard `*` to allow all origins. In production environments, it's recommended to specify exact origins instead of using the wildcard.
+
+Common configurations:
+- `*` - Allow all origins (default, convenient for local testing)
+- `http://localhost:3000` - Allow single specific origin
+- `http://localhost:3000,https://example.com` - Allow multiple specific origins
+
+---
+
 ### `oauth2` (object, optional)
 
 OAuth2 provider configuration options.
@@ -302,13 +324,26 @@ The client identifier used in OAuth2/OIDC flows.
 - **Required**: Yes
 - **Example**: `id: "my-app"`
 
-##### `secret` (string, required)
+##### `secret` (string, optional)
 
 The client secret used for authentication when exchanging authorization codes for tokens.
 
 - **Type**: String
-- **Required**: Yes
+- **Required**: No (omit for public clients)
 - **Example**: `secret: "super_secret_value"`
+
+**Client Types:**
+
+- **Confidential clients**: Provide a `secret` value. The client must send this secret when calling `/oauth2/token`.
+- **Public clients**: Omit the `secret` field or set it to an empty string `""`. These clients can obtain tokens without providing a secret.
+
+Public clients are typically used for:
+- Single Page Applications (SPAs) running in browsers
+- Mobile applications
+- Desktop applications
+- Any client where the secret cannot be securely stored
+
+**Security Note**: Public clients rely on other security mechanisms like PKCE (Proof Key for Code Exchange), redirect URI validation, and short-lived authorization codes. In production environments, consider implementing PKCE for additional security.
 
 ##### `redirect_uri` (string, required)
 
@@ -330,10 +365,18 @@ The audience value included in the `aud` claim of issued JWT tokens.
 
 ```yaml
 clients:
+  # Confidential client (backend server)
   - id: "web-app"
     secret: "web-app-secret-123"
     redirect_uri: "http://localhost:3000/auth/callback"
     audience: "api.example.com"
+  
+  # Public client (SPA - no secret)
+  - id: "spa-app"
+    redirect_uri: "http://localhost:3000/callback"
+    audience: "api.example.com"
+  
+  # Confidential client (mobile backend)
   - id: "mobile-app"
     secret: "mobile-app-secret-456"
     redirect_uri: "myapp://callback"

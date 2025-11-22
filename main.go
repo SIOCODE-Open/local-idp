@@ -65,7 +65,8 @@ func main() {
 	router.HandleFunc("/users/{id}", GET_users_id).Methods("GET")
 	router.HandleFunc("/users", GET_users).Methods("GET")
 
-	loggedRouter := accessLogger(router)
+	corsRouter := corsMiddleware(router)
+	loggedRouter := accessLogger(corsRouter)
 
 	addr := ":" + strconv.Itoa(port)
 	if err := http.ListenAndServe(addr, loggedRouter); err != nil {
