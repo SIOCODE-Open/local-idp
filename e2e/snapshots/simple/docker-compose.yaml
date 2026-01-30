@@ -1,0 +1,11 @@
+services:
+  idp:
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+    volumes:
+      - ./local-idp.config.yaml:/config.yaml:ro
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080

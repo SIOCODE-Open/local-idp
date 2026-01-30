@@ -1,0 +1,24 @@
+port: 8080
+access_token_expiration_seconds: 900    # 15 minutes
+refresh_token_expiration_seconds: 86400 # 1 day
+allowed_origins: "*"                    # CORS allowed origins (optional, defaults to *)
+
+# Login API configuration (optional, defaults shown)
+login_api:
+  enabled: true                      # Enable Cognito-style login API endpoints
+
+users:
+  - id: "1"
+    username: "user1"
+    password: "password1"
+    attributes:
+      role_name: "admin"
+      email: "user1@example.com"
+
+clients:
+  # Confidential client (backend server) - requires secret
+  - id: "client1"
+    audience: "example.com"
+    secret: "super_secret"
+    redirect_uri: "http://localhost:3000/callback"
+  

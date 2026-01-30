@@ -1,0 +1,25 @@
+port: 8082
+access_token_expiration_seconds: 900
+refresh_token_expiration_seconds: 86400
+allowed_origins: "*"
+
+# Keep OAuth2/OIDC enabled
+oauth2:
+  enabled: true
+
+# Disable Login API endpoints
+login_api:
+  enabled: false
+
+users:
+  - id: "1"
+    username: "user1"
+    password: "password1"
+    attributes:
+      email: "user1@example.com"
+
+clients:
+  - id: "client1"
+    audience: "example.com"
+    secret: "super_secret"
+    redirect_uri: "http://localhost:3000/callback"

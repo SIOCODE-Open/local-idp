@@ -1,0 +1,65 @@
+port: 8086
+access_token_expiration_seconds: 900
+refresh_token_expiration_seconds: 86400
+allowed_origins: "*"
+
+oauth2:
+  enabled: true
+
+login_api:
+  enabled: true
+
+# Map specific user attributes to access token claims
+map_access_token_claims:
+  roles: role_name          # Maps role_name attribute to "roles" claim
+  email: email              # Maps email attribute to "email" claim
+  dept: department          # Maps department attribute to "dept" claim
+  level: access_level       # Maps access_level attribute to "level" claim
+
+# Map specific user attributes to identity token claims
+map_identity_token_claims:
+  email: email              # Maps email attribute to "email" claim
+  name: full_name           # Maps full_name attribute to "name" claim
+  roles: role_name          # Maps role_name attribute to "roles" claim
+  picture: avatar_url       # Maps avatar_url attribute to "picture" claim
+
+users:
+  - id: "1"
+    username: "admin"
+    password: "admin123"
+    attributes:
+      role_name: "administrator"
+      email: "admin@example.com"
+      full_name: "Admin User"
+      department: "IT"
+      access_level: "high"
+      avatar_url: "https://example.com/admin.jpg"
+      internal_id: "EMP001"       # Should NOT appear in tokens
+      secret_key: "secret123"     # Should NOT appear in tokens
+
+  - id: "2"
+    username: "developer"
+    password: "dev123"
+    attributes:
+      role_name: "developer"
+      email: "dev@example.com"
+      full_name: "Dev User"
+      department: "Engineering"
+      access_level: "medium"
+      avatar_url: "https://example.com/dev.jpg"
+      team: "Backend"             # Should NOT appear in tokens
+
+  - id: "3"
+    username: "guest"
+    password: "guest123"
+    attributes:
+      # Only has some attributes
+      email: "guest@example.com"
+      full_name: "Guest User"
+      # Missing: role_name, department, access_level, avatar_url
+
+clients:
+  - id: "client1"
+    audience: "example.com"
+    secret: "super_secret"
+    redirect_uri: "http://localhost:3000/callback"

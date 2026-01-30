@@ -1,0 +1,14 @@
+{
+    "name": "@siocode/local-idp-e2e",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "devDependencies": {
+        "mocha": "11.7.5",
+        "chai": "6.2.2",
+        "zod": "4.3.6"
+    },
+    "scripts": {
+        "test": "mocha ./tests/**/*.test.mjs --timeout 60000"
+    }
+}

@@ -1,0 +1,42 @@
+port: 8084
+access_token_expiration_seconds: 900
+refresh_token_expiration_seconds: 86400
+allowed_origins: "*"
+
+oauth2:
+  enabled: true
+
+login_api:
+  enabled: true
+
+users:
+  - id: "1"
+    username: "admin"
+    password: "admin123"
+    attributes:
+      role_name: "administrator"
+      email: "admin@example.com"
+      department: "IT"
+      level: "senior"
+
+  - id: "2"
+    username: "user"
+    password: "user123"
+    attributes:
+      role_name: "user"
+      email: "user@example.com"
+      department: "Sales"
+      level: "junior"
+
+  - id: "3"
+    username: "guest"
+    password: "guest123"
+    attributes:
+      role_name: "guest"
+      email: "guest@example.com"
+
+clients:
+  - id: "client1"
+    audience: "example.com"
+    secret: "super_secret"
+    redirect_uri: "http://localhost:3000/callback"

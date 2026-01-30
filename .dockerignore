@@ -1,0 +1,6 @@
+*.exe
+local-idp
+example/
+e2e/
+.vscode/
+*.md

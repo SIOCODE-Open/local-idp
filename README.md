@@ -163,6 +163,16 @@ Build the container via the following command (builds for both X86 & ARM archite
 docker buildx build --platform=linux/arm64,linux/amd64 -t siocode/local-idp:latest .
 ```
 
+## 🧪 Testing
+
+End-to-end tests are in the `e2e/` folder using Mocha + Chai + Docker Compose. To run:
+
+```bash
+cd e2e
+npm install
+npm test
+```
+
 ## 📜 License
 
 MIT © 2025 SIOCODE
